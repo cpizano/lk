@@ -114,7 +114,7 @@ STATIC const SWM_GRP_T swmSetup[] = {
 /* Sets up system pin muxing */
 void Board_SetupMuxing(void)
 {
-    int i;
+    unsigned int i;
 
     /* Enable SWM and IOCON clocks */
     Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_IOCON);
