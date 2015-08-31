@@ -4,13 +4,17 @@ MODULE := $(LOCAL_DIR)
 
 ARCH := arm
 ARM_CPU := cortex-a9-neon
+WITH_SMP ?= 1
+SMP_MAX_CPUS := 2
 
 MODULE_DEPS := \
 	lib/bio \
 	lib/cbuf \
+	lib/watchdog \
 	dev/cache/pl310 \
 	dev/interrupt/arm_gic \
 	dev/timer/arm_cortex_a9
+
 
 GLOBAL_INCLUDES += \
 	$(LOCAL_DIR)/include
@@ -24,6 +28,7 @@ MODULE_SRCS += \
 	$(LOCAL_DIR)/qspi.c \
 	$(LOCAL_DIR)/spiflash.c \
 	$(LOCAL_DIR)/start.S \
+	$(LOCAL_DIR)/swdt.c \
 	$(LOCAL_DIR)/uart.c \
 
 # default to no sdram unless the target calls it out
@@ -37,7 +42,8 @@ MODULE_SRCS += \
 	$(LOCAL_DIR)/gem.c \
 
 GLOBAL_DEFINES += \
-	ZYNQ_WITH_GEM_ETH=1
+	ZYNQ_WITH_GEM_ETH=1 \
+	ARM_ARCH_WAIT_FOR_SECONDARIES=1
 
 # gem driver depends on minip interface
 MODULE_DEPS += \

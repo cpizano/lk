@@ -122,12 +122,15 @@
 /* Save all registers.
  * At exit r0 contains a pointer to the register frame.
  */
-.macro saveall, mode
-	/* save spsr and r14 onto our stack */
-	srsdb	\mode!
+.macro saveall
+	/* save spsr and r14 onto the svc stack */
+	srsdb	#0x13!
+
+	/* switch to svc mode, interrupts disabled */
+	cpsid	i,#0x13
 
 	/* save all regs */
-	push	{ r0-r12 }
+	push	{ r0-r12, lr }
 
 	/* save user space sp/lr */
 	sub		sp, #8
@@ -144,9 +147,9 @@
 	/* r0 now holds the pointer to the original iframe (before alignment) */
 .endm
 
-.macro saveall_offset, offset, mode
+.macro saveall_offset, offset
 	sub		lr, \offset
-	saveall	\mode
+	saveall
 .endm
 
 .macro restoreall
@@ -176,16 +179,18 @@ FUNCTION(arm_undefined)
 
 	restore
 
+#ifndef WITH_LIB_SYSCALL
 FUNCTION(arm_syscall)
-	saveall #0x13
+	saveall
 	/* r0 now holds pointer to iframe */
 
 	bl		arm_syscall_handler
 
 	restoreall
+#endif
 
 FUNCTION(arm_prefetch_abort)
-	saveall_offset #4, #0x17
+	saveall_offset #4
 	/* r0 now holds pointer to iframe */
 
 	bl		arm_prefetch_abort_handler
@@ -193,7 +198,7 @@ FUNCTION(arm_prefetch_abort)
 	restoreall
 
 FUNCTION(arm_data_abort)
-	saveall_offset #8, #0x17
+	saveall_offset #8
 	/* r0 now holds pointer to iframe */
 
 	bl		arm_data_abort_handler
@@ -214,12 +219,6 @@ FUNCTION(arm_irq)
 
 	/* r0 now holds pointer to iframe */
 
-	/* increment the global critical section count */
-	LOADCONST(r2, critical_section_count)
-	ldr     r1, [r2]
-	add     r1, #1
-	str     r1, [r2]
-
 	/* track that we're inside an irq handler */
 	LOADCONST(r2, __arm_in_handler)
 	mov		r1, #1
@@ -236,12 +235,6 @@ FUNCTION(arm_irq)
 	/* reschedule if the handler returns nonzero */
 	cmp     r0, #0
 	blne    thread_preempt
-
-	/* decrement the global critical section count */
-	LOADCONST(r1, critical_section_count)
-	ldr     r0, [r1]
-	sub     r0, r0, #1
-	str     r0, [r1]
 
 	restore
 

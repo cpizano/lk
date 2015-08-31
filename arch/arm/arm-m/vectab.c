@@ -37,9 +37,13 @@ extern void _memmanage(void);
 extern void _busfault(void);
 extern void _usagefault(void);
 extern void _svc(void);
-extern void _pendsv(void);
+extern void _debugmonitor(void);
 extern void _pendsv(void);
 extern void _systick(void);
+
+#if defined(WITH_DEBUGGER_INFO)
+extern struct __debugger_info__ _debugger_info;
+#endif
 
 const void * const __SECTION(".text.boot.vectab1") vectab[] = {
 	/* arm exceptions */
@@ -51,11 +55,16 @@ const void * const __SECTION(".text.boot.vectab1") vectab[] = {
 	_busfault, // bus fault
 	_usagefault, // usage fault
 	0, // reserved
+#if defined(WITH_DEBUGGER_INFO)
+	(void*) 0x52474244,
+	&_debugger_info,
+#else
 	0, // reserved
 	0, // reserved
+#endif
 	0, // reserved
 	_svc, // svcall
-	0, // debug monitor
+	_debugmonitor, // debug monitor
 	0, // reserved
 	_pendsv, // pendsv
 	_systick, // systick

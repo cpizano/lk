@@ -23,6 +23,7 @@
 #ifndef __STDLIB_H
 #define __STDLIB_H
 
+#include <compiler.h>
 #include <sys/types.h>
 #include <stddef.h>
 #include <malloc.h>
@@ -30,11 +31,16 @@
 #include <rand.h>
 #include <arch/defines.h>
 
+__BEGIN_CDECLS;
+
 int atoi(const char *num);
 unsigned int atoui(const char *num);
 long atol(const char *num);
 unsigned long atoul(const char *num);
 unsigned long long atoull(const char *num);
+
+long strtol(const char *nptr, char **endptr, int base);
+long long strtoll(const char *nptr, char **endptr, int base);
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -49,7 +55,14 @@ unsigned long long atoull(const char *num);
 #define STACKBUF_DMA_ALIGN(var, size) \
     uint8_t __##var[(size) + CACHE_LINE]; uint8_t *var = (uint8_t *)(ROUNDUP((addr_t)__##var, CACHE_LINE))
 
+void abort(void) __attribute__((noreturn));
 void qsort(void *aa, size_t n, size_t es, int (*cmp)(const void *, const void *));
+void *bsearch(const void *key, const void *base, size_t num_elems, size_t size,
+              int (*compare)(const void *, const void *));
+unsigned long int strtoul(const char *nptr, char **endptr, int base);
+char *getenv(const char *name);
+
+__END_CDECLS;
 
 #endif
 
